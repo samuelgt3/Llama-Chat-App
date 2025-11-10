@@ -69,7 +69,6 @@ export default function AIChatApp() {
     try {
       await saveMessages(updatedMessages);
       
-      // Call API on the same origin - no need for worker URL
       const response = await fetch(`/api/chat?sessionId=${sessionId}`, {
         method: 'POST',
         headers: {
@@ -111,12 +110,10 @@ export default function AIChatApp() {
 
   const clearConversation = async () => {
     try {
-      // Clear on server
       await fetch(`/api/clear?sessionId=${sessionId}`, {
         method: 'POST'
       });
       
-      // Clear local storage
       await window.storage.delete(`messages-${sessionId}`);
       setMessages([]);
     } catch (error) {
@@ -126,18 +123,53 @@ export default function AIChatApp() {
 
   if (showConfig) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-slate-800/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-700/50 p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Settings</h2>
+      <div style={{ 
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
+        background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #0f172a)'
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '28rem',
+          backdropFilter: 'blur(40px)',
+          borderRadius: '1.5rem',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          padding: '2rem',
+          backgroundColor: 'rgba(30, 41, 59, 0.4)',
+          border: '1px solid rgba(51, 65, 85, 0.5)'
+        }}>
+          <h2 style={{ 
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            marginBottom: '1.5rem',
+            color: '#ffffff'
+          }}>Settings</h2>
           
-          <div className="text-slate-300 text-sm">
-            <p className="mb-4">Your app is configured to use the same-origin API routes.</p>
-            <p>Session ID: <span className="text-purple-400 font-mono">{sessionId.substring(0, 30)}...</span></p>
+          <div style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>
+            <p style={{ marginBottom: '1rem' }}>Your app is configured to use the same-origin API routes.</p>
+            <p>Session ID: <span style={{ fontFamily: 'monospace', color: '#a78bfa' }}>{sessionId.substring(0, 30)}...</span></p>
           </div>
 
           <button
             onClick={() => setShowConfig(false)}
-            className="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white rounded-2xl px-6 py-3 transition-colors"
+            style={{
+              marginTop: '1.5rem',
+              width: '100%',
+              borderRadius: '1rem',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#9333ea',
+              color: '#ffffff',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+              fontSize: '1rem',
+              fontWeight: '500'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#7e22ce'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#9333ea'}
           >
             Close
           </button>
@@ -147,71 +179,198 @@ export default function AIChatApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 flex">
+    <div style={{ 
+      minHeight: '100vh',
+      display: 'flex',
+      background: 'linear-gradient(to bottom right, #1e1b4b,rgb(27, 9, 57), #0f172a)'
+    }}>
       {/* Sidebar */}
-      <div className="w-64 bg-slate-900/50 border-r border-slate-800/50 p-4 flex flex-col">
-        <div className="flex-1">
-          <h1 className="text-white font-semibold text-lg mb-4">Chat History</h1>
-          <div className="space-y-2">
-            <div className="bg-slate-800/50 rounded-lg p-3 text-slate-300 text-sm">
+      <div style={{ 
+        width: '256px',
+        minWidth: '256px',
+        padding: '1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'rgba(15, 23, 42, 0.5)',
+        borderRight: '1px solid rgba(30, 41, 59, 0.5)'
+      }}>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ 
+            color: '#ffffff',
+            fontWeight: '600',
+            fontSize: '1.125rem',
+            marginBottom: '1rem'
+          }}>Chat History</h1>
+          <div>
+            <div style={{ 
+              backgroundColor: 'rgba(30, 41, 59, 0.5)',
+              color: '#cbd5e1',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              fontSize: '0.875rem'
+            }}>
               Current Session
             </div>
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button
             onClick={() => setShowConfig(true)}
-            className="w-full flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg p-3 transition-colors"
+            style={{ 
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#cbd5e1',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#cbd5e1';
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
-            <Settings className="w-4 h-4" />
-            <span className="text-sm">Settings</span>
+            <Settings style={{ width: '1rem', height: '1rem' }} />
+            <span style={{ fontSize: '0.875rem' }}>Settings</span>
           </button>
           <button
             onClick={clearConversation}
-            className="w-full flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg p-3 transition-colors"
+            style={{ 
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#cbd5e1',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#cbd5e1';
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
-            <Trash2 className="w-4 h-4" />
-            <span className="text-sm">Clear Chat</span>
+            <Trash2 style={{ width: '1rem', height: '1rem' }} />
+            <span style={{ fontSize: '0.875rem' }}>Clear Chat</span>
           </button>
         </div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
+      <div style={{ 
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        maxWidth: '100rem',
+        width: '100%',
+        margin: '0 auto'
+      }}>
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-8 py-12">
+        <div style={{ 
+          flex: 1,
+          overflowY: 'auto',
+          padding: '3rem 2rem'
+        }}>
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-2xl">
-                <div className="bg-slate-800/30 backdrop-blur-sm rounded-3xl px-16 py-12 mb-8 inline-block">
-                  <h2 className="text-white text-4xl font-light">Welcome! Type something to start</h2>
+            <div style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%'
+            }}>
+              <div style={{ textAlign: 'center', maxWidth: '42rem' }}>
+                <div style={{ 
+                  backdropFilter: 'blur(4px)',
+                  borderRadius: '1.5rem',
+                  padding: '3rem 4rem',
+                  marginBottom: '2rem',
+                  display: 'inline-block',
+                  backgroundColor: 'rgba(30, 41, 59, 0.3)'
+                }}>
+                  <h2 style={{ 
+                    fontSize: '2.25rem',
+                    fontWeight: '300',
+                    color: '#ffffff'
+                  }}>Welcome! Type something to start</h2>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-8 max-w-4xl mx-auto">
+            <div style={{ 
+              maxWidth: '56rem',
+              margin: '0 auto'
+            }}>
               {messages.map((message, index) => (
-                <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[75%] rounded-3xl px-6 py-4 ${
-                      message.role === 'user'
-                        ? 'bg-blue-600/90 text-white'
-                        : 'bg-slate-800/50 text-slate-200'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap text-base leading-relaxed">{message.content}</p>
+                <div key={index} style={{ 
+                  display: 'flex',
+                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                  marginBottom: '2rem'
+                }}>
+                  <div style={{
+                    maxWidth: '75%',
+                    borderRadius: '1.5rem',
+                    padding: '1rem 1.5rem',
+                    backgroundColor: message.role === 'user' ? 'rgba(147, 51, 234, 0.9)' : 'rgba(30, 41, 59, 0.5)',
+                    color: message.role === 'user' ? '#ffffff' : '#e2e8f0'
+                  }}>
+                    <p style={{ 
+                      whiteSpace: 'pre-wrap',
+                      fontSize: '1rem',
+                      lineHeight: '1.625',
+                      margin: 0
+                    }}>{message.content}</p>
                   </div>
                 </div>
               ))}
               
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-slate-800/50 rounded-3xl px-6 py-4">
-                    <div className="flex gap-1.5">
-                      <div className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <div style={{ 
+                    borderRadius: '1.5rem',
+                    padding: '1rem 1.5rem',
+                    backgroundColor: 'rgba(30, 41, 59, 0.5)'
+                  }}>
+                    <div style={{ display: 'flex', gap: '0.375rem' }}>
+                      <div style={{ 
+                        width: '0.625rem',
+                        height: '0.625rem',
+                        borderRadius: '9999px',
+                        backgroundColor: '#94a3b8',
+                        animation: 'bounce 1s infinite',
+                        animationDelay: '0ms'
+                      }}></div>
+                      <div style={{ 
+                        width: '0.625rem',
+                        height: '0.625rem',
+                        borderRadius: '9999px',
+                        backgroundColor: '#94a3b8',
+                        animation: 'bounce 1s infinite',
+                        animationDelay: '150ms'
+                      }}></div>
+                      <div style={{ 
+                        width: '0.625rem',
+                        height: '0.625rem',
+                        borderRadius: '9999px',
+                        backgroundColor: '#94a3b8',
+                        animation: 'bounce 1s infinite',
+                        animationDelay: '300ms'
+                      }}></div>
                     </div>
                   </div>
                 </div>
@@ -223,9 +382,12 @@ export default function AIChatApp() {
         </div>
 
         {/* Input Area */}
-        <div className="px-8 py-6 border-t border-slate-800/30">
-          <div className="max-w-4xl mx-auto">
-            <div className="relative">
+        <div style={{ 
+          padding: '1.5rem 2rem',
+          borderTop: '1px solid rgba(30, 41, 59, 0.3)'
+        }}>
+          <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
+            <div style={{ position: 'relative' }}>
               <input
                 ref={inputRef}
                 type="text"
@@ -233,20 +395,65 @@ export default function AIChatApp() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
                 placeholder="Type something..."
-                className="w-full bg-slate-800/50 backdrop-blur-sm text-white text-base placeholder-slate-400 rounded-full px-7 py-5 pr-16 focus:outline-none focus:ring-2 focus:ring-purple-500/50 border border-slate-700/50 transition-all"
                 disabled={isLoading}
+                style={{
+                  width: '100%',
+                  backdropFilter: 'blur(4px)',
+                  fontSize: '1rem',
+                  borderRadius: '9999px',
+                  padding: '1.25rem 4rem 1.25rem 1.75rem',
+                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(51, 65, 85, 0.5)',
+                  outline: 'none',
+                  transition: 'box-shadow 0.2s'
+                }}
+                onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px rgba(147, 51, 234, 0.5)'}
+                onBlur={(e) => e.target.style.boxShadow = 'none'}
               />
               <button
                 onClick={handleSubmit}
                 disabled={!input.trim() || isLoading}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-full p-3 transition-colors"
+                style={{
+                  position: 'absolute',
+                  right: '0.625rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  backgroundColor: !input.trim() || isLoading ? '#334155' : '#9333ea',
+                  color: '#ffffff',
+                  cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+                  borderRadius: '9999px',
+                  padding: '0.75rem',
+                  border: 'none',
+                  transition: 'background-color 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  if (input.trim() && !isLoading) {
+                    e.target.style.backgroundColor = '#7e22ce';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (input.trim() && !isLoading) {
+                    e.target.style.backgroundColor = '#9333ea';
+                  }
+                }}
               >
-                <Send className="w-5 h-5" />
+                <Send style={{ width: '1.25rem', height: '1.25rem' }} />
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-0.5rem); }
+        }
+      `}</style>
     </div>
   );
 }
