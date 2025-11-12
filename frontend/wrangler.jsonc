@@ -1,0 +1,15 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"compatibility_date": "2025-11-05",
+	"pages_build_output_dir": "./dist",
+	"observability": {
+		"enabled": true
+	},
+  // Cloudflare Workers configuration
+  "name": "ai-chat-worker",
+
+}

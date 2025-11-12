@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Trash2, Settings } from 'lucide-react';
 
-export default function AIChatApp() {
+export default function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [showConfig, setShowConfig] = useState(false);
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
 
   useEffect(() => {
     initializeSession();
@@ -179,42 +178,44 @@ export default function AIChatApp() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      display: 'flex',
-      background: 'linear-gradient(to bottom right, #1e1b4b,rgb(27, 9, 57), #0f172a)'
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: 'grid',
+      gridTemplateColumns: '256px 1fr',
+      background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #0f172a)'
     }}>
-      {/* Sidebar */}
-      <div style={{ 
-        width: '256px',
-        minWidth: '256px',
+      {/* Sidebar - Using Grid Layout */}
+      <aside style={{ 
         padding: '1rem',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'rgba(15, 23, 42, 0.5)',
-        borderRight: '1px solid rgba(30, 41, 59, 0.5)'
+        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+        borderRight: '2px solid rgba(147, 51, 234, 0.3)',
+        overflowY: 'auto'
       }}>
         <div style={{ flex: 1 }}>
           <h1 style={{ 
             color: '#ffffff',
             fontWeight: '600',
             fontSize: '1.125rem',
-            marginBottom: '1rem'
+            margin: '0 0 1rem 0'
           }}>Chat History</h1>
-          <div>
-            <div style={{ 
-              backgroundColor: 'rgba(30, 41, 59, 0.5)',
-              color: '#cbd5e1',
-              borderRadius: '0.5rem',
-              padding: '0.75rem',
-              fontSize: '0.875rem'
-            }}>
-              Current Session
-            </div>
+          <div style={{ 
+            backgroundColor: 'rgba(30, 41, 59, 0.7)',
+            color: '#cbd5e1',
+            borderRadius: '0.5rem',
+            padding: '0.75rem',
+            fontSize: '0.875rem'
+          }}>
+            Current Session
           </div>
         </div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
           <button
             onClick={() => setShowConfig(true)}
             style={{ 
@@ -228,7 +229,8 @@ export default function AIChatApp() {
               border: 'none',
               background: 'transparent',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              fontSize: '0.875rem',
+              marginBottom: '0.5rem'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = '#ffffff';
@@ -240,7 +242,7 @@ export default function AIChatApp() {
             }}
           >
             <Settings style={{ width: '1rem', height: '1rem' }} />
-            <span style={{ fontSize: '0.875rem' }}>Settings</span>
+            <span>Settings</span>
           </button>
           <button
             onClick={clearConversation}
@@ -255,7 +257,7 @@ export default function AIChatApp() {
               border: 'none',
               background: 'transparent',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              fontSize: '0.875rem'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = '#ffffff';
@@ -267,19 +269,16 @@ export default function AIChatApp() {
             }}
           >
             <Trash2 style={{ width: '1rem', height: '1rem' }} />
-            <span style={{ fontSize: '0.875rem' }}>Clear Chat</span>
+            <span>Clear Chat</span>
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Main Chat Area */}
-      <div style={{ 
+      <main style={{ 
         display: 'flex',
-        flex: 1,
         flexDirection: 'column',
-        maxWidth: '100rem',
-        width: '100%',
-        margin: '0 auto'
+        overflow: 'hidden'
       }}>
         {/* Messages */}
         <div style={{ 
@@ -299,14 +298,14 @@ export default function AIChatApp() {
                   backdropFilter: 'blur(4px)',
                   borderRadius: '1.5rem',
                   padding: '3rem 4rem',
-                  marginBottom: '2rem',
                   display: 'inline-block',
                   backgroundColor: 'rgba(30, 41, 59, 0.3)'
                 }}>
                   <h2 style={{ 
                     fontSize: '2.25rem',
                     fontWeight: '300',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    margin: 0
                   }}>Welcome! Type something to start</h2>
                 </div>
               </div>
@@ -350,26 +349,23 @@ export default function AIChatApp() {
                       <div style={{ 
                         width: '0.625rem',
                         height: '0.625rem',
-                        borderRadius: '9999px',
+                        borderRadius: '50%',
                         backgroundColor: '#94a3b8',
-                        animation: 'bounce 1s infinite',
-                        animationDelay: '0ms'
+                        animation: 'bounce 1s infinite 0ms'
                       }}></div>
                       <div style={{ 
                         width: '0.625rem',
                         height: '0.625rem',
-                        borderRadius: '9999px',
+                        borderRadius: '50%',
                         backgroundColor: '#94a3b8',
-                        animation: 'bounce 1s infinite',
-                        animationDelay: '150ms'
+                        animation: 'bounce 1s infinite 150ms'
                       }}></div>
                       <div style={{ 
                         width: '0.625rem',
                         height: '0.625rem',
-                        borderRadius: '9999px',
+                        borderRadius: '50%',
                         backgroundColor: '#94a3b8',
-                        animation: 'bounce 1s infinite',
-                        animationDelay: '300ms'
+                        animation: 'bounce 1s infinite 300ms'
                       }}></div>
                     </div>
                   </div>
@@ -389,7 +385,6 @@ export default function AIChatApp() {
           <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
             <div style={{ position: 'relative' }}>
               <input
-                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -406,7 +401,7 @@ export default function AIChatApp() {
                   color: '#ffffff',
                   border: '1px solid rgba(51, 65, 85, 0.5)',
                   outline: 'none',
-                  transition: 'box-shadow 0.2s'
+                  boxSizing: 'border-box'
                 }}
                 onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px rgba(147, 51, 234, 0.5)'}
                 onBlur={(e) => e.target.style.boxShadow = 'none'}
@@ -422,10 +417,9 @@ export default function AIChatApp() {
                   backgroundColor: !input.trim() || isLoading ? '#334155' : '#9333ea',
                   color: '#ffffff',
                   cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
-                  borderRadius: '9999px',
+                  borderRadius: '50%',
                   padding: '0.75rem',
                   border: 'none',
-                  transition: 'background-color 0.2s',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -446,7 +440,7 @@ export default function AIChatApp() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <style>{`
         @keyframes bounce {
