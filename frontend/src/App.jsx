@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Trash2, Settings } from 'lucide-react';
 
+const API_BASE_URL = 'https://ai-chat-worker.sgetnet283.workers.dev';
+
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -67,8 +69,7 @@ export default function App() {
 
     try {
       await saveMessages(updatedMessages);
-      
-      const response = await fetch(`/api/chat?sessionId=${sessionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/chat?sessionId=${sessionId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ export default function App() {
       }
 
       const data = await response.json();
-      
+
       const assistantMessage = {
         role: 'assistant',
         content: data.message,
@@ -109,10 +110,10 @@ export default function App() {
 
   const clearConversation = async () => {
     try {
-      await fetch(`/api/clear?sessionId=${sessionId}`, {
+      await fetch(`${API_BASE_URL}/api/clear?sessionId=${sessionId}`, {
         method: 'POST'
       });
-      
+
       await window.storage.delete(`messages-${sessionId}`);
       setMessages([]);
     } catch (error) {
