@@ -11,5 +11,5 @@
 	},
   // Cloudflare Workers configuration
   "name": "ai-chat-worker",
-
 }
+

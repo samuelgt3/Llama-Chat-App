@@ -6,9 +6,10 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
-  const [showConfig, setShowConfig] = useState(false);
+  const [showConfig, setShowConfig] = useState(true);
   const messagesEndRef = useRef(null);
 
+  const WORKER_URL = "https://ai-chat-worker.sgetnet283.workers.dev";
   useEffect(() => {
     initializeSession();
   }, []);
@@ -68,7 +69,7 @@ export default function App() {
     try {
       await saveMessages(updatedMessages);
       
-      const response = await fetch(`/api/chat?sessionId=${sessionId}`, {
+      const response = await fetch(`${WORKER_URL}/api/chat?sessionId=${sessionId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ export default function App() {
 
   const clearConversation = async () => {
     try {
-      await fetch(`/api/clear?sessionId=${sessionId}`, {
+      await fetch(`${WORKER_URL}/api/clear?sessionId=${sessionId}`, {
         method: 'POST'
       });
       
