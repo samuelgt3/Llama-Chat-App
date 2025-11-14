@@ -6,7 +6,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
-  const [showConfig, setShowConfig] = useState(true);
+  const [showConfig, setShowConfig] = useState(false);
   const messagesEndRef = useRef(null);
 
   const WORKER_URL = "https://ai-chat-worker.sgetnet283.workers.dev";
@@ -20,9 +20,9 @@ export default function App() {
 
   const initializeSession = async () => {
     try {
-      const stored = await window.storage.get('chat-session');
+      const stored = await window.storage.getItem('chat-session');
       if (stored) {
-        const data = JSON.parse(stored.value);
+        const data = JSON.parse(stored);
         setSessionId(data.sessionId);
         
         const msgStored = await window.storage.get(`messages-${data.sessionId}`);
@@ -32,7 +32,7 @@ export default function App() {
       } else {
         const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         setSessionId(newSessionId);
-        await window.storage.set('chat-session', JSON.stringify({
+        localStorage.setItem('chat-session', JSON.stringify({
           sessionId: newSessionId
         }));
       }
@@ -45,7 +45,7 @@ export default function App() {
 
   const saveMessages = async (msgs) => {
     try {
-      await window.storage.set(`messages-${sessionId}`, JSON.stringify(msgs));
+      localStorage.setItem(`messages-${sessionId}`, JSON.stringify(msgs));
     } catch (error) {
       console.error('Failed to save messages:', error);
     }
@@ -114,7 +114,7 @@ export default function App() {
         method: 'POST'
       });
       
-      await window.storage.delete(`messages-${sessionId}`);
+      localStorage.removeItem(`messages-${sessionId}`);
       setMessages([]);
     } catch (error) {
       console.error('Failed to clear conversation:', error);

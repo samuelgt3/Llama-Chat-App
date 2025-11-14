@@ -1,0 +1,11 @@
+{
+  "name": "ai-chat-frontend-trial2",
+  "compatibility_date": "2025-01-01",
+  
+
+  "pages_build_output_dir": ".",
+
+  "vars": {
+    "WORKER_URL": "https://ai-chat-worker.sgetnet283.workers.dev"
+  }
+}
