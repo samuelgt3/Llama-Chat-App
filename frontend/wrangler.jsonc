@@ -9,7 +9,6 @@
 	"observability": {
 		"enabled": true
 	},
-  // Cloudflare Workers configuration
-  "name": "ai-chat-worker",
+  "name": "my-worker"
 }
 

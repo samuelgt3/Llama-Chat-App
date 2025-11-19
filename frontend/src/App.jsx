@@ -6,51 +6,147 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
-  const [showConfig, setShowConfig] = useState(false);
+  const [chatSessions, setChatSessions] = useState([]);           
+  const [currentSessionId, setCurrentSessionId] = useState('');
+  const [showConfig, setShowConfig] = useState(true);
   const messagesEndRef = useRef(null);
 
   const WORKER_URL = "https://ai-chat-worker.sgetnet283.workers.dev";
   useEffect(() => {
     initializeSession();
-  }, []);
-
+    loadChatSessions(); 
+  }, []);   
+  const loadChatSessions = async () => {
+    try {
+      const stored = await window.storage.list('chat-session-');
+      if (stored && stored.keys) {
+        const sessions = [];
+        for (const key of stored.keys) {
+          try {
+            const sessionData = await window.storage.get(key);
+            if (sessionData) {
+              const data = JSON.parse(sessionData.value);
+              sessions.push(data);
+            }
+          } catch (e) {
+            console.error('Error loading session:', e);
+          }
+        }
+        // Sort by timestamp, newest first
+        sessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setChatSessions(sessions);
+      }
+    } catch (error) {
+      console.error('Failed to load chat sessions:', error);
+    }
+  };
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const initializeSession = async () => {
     try {
-      const stored = await window.storage.getItem('chat-session');
+      const stored = await window.storage.get('current-chat-session');   
       if (stored) {
-        const data = JSON.parse(stored);
+        const data = JSON.parse(stored.value);
         setSessionId(data.sessionId);
+        setCurrentSessionId(data.sessionId);                             
         
         const msgStored = await window.storage.get(`messages-${data.sessionId}`);
         if (msgStored) {
           setMessages(JSON.parse(msgStored.value));
         }
       } else {
-        const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        setSessionId(newSessionId);
-        localStorage.setItem('chat-session', JSON.stringify({
-          sessionId: newSessionId
-        }));
+        await createNewChat();                                           
       }
     } catch (error) {
-      const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      setSessionId(newSessionId);
+      await createNewChat();                                              
       console.error('Storage error:', error);
     }
   };
+  const createNewChat = async () => {
+    const newSessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newSession = {
+      sessionId: newSessionId,
+      title: 'New Chat',
+      timestamp: new Date().toISOString(),
+      preview: ''
+    };
+    
+    setSessionId(newSessionId);
+    setCurrentSessionId(newSessionId);
+    setMessages([]);
+    
+    try {
+      await window.storage.set('current-chat-session', JSON.stringify(newSession));
+      await window.storage.set(`chat-session-${newSessionId}`, JSON.stringify(newSession));
+      await loadChatSessions();
+    } catch (error) {
+      console.error('Failed to create new chat:', error);
+    }
+  };
+  const switchToSession = async (sessionId) => {
+    try {
+      const sessionData = await window.storage.get(`chat-session-${sessionId}`);
+      if (sessionData) {
+        const data = JSON.parse(sessionData.value);
+        setSessionId(sessionId);
+        setCurrentSessionId(sessionId);
+        
+        await window.storage.set('current-chat-session', JSON.stringify(data));
+        
+        const msgStored = await window.storage.get(`messages-${sessionId}`);
+        if (msgStored) {
+          setMessages(JSON.parse(msgStored.value));
+        } else {
+          setMessages([]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to switch session:', error);
+    }
+  };
 
+  const deleteSession = async (sessionIdToDelete, e) => {
+    e.stopPropagation();
+    
+    try {
+      await window.storage.delete(`chat-session-${sessionIdToDelete}`);
+      await window.storage.delete(`messages-${sessionIdToDelete}`);
+      
+      if (sessionIdToDelete === currentSessionId) {
+        await createNewChat();
+      }
+      
+      await loadChatSessions();
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+    }
+  };
   const saveMessages = async (msgs) => {
     try {
-      localStorage.setItem(`messages-${sessionId}`, JSON.stringify(msgs));
+      await window.storage.set(`messages-${sessionId}`, JSON.stringify(msgs));
+      
+      // ← ADDED: Update session with preview and title
+      if (msgs.length > 0) {
+        const firstUserMsg = msgs.find(m => m.role === 'user');
+        const preview = firstUserMsg ? firstUserMsg.content.substring(0, 50) : 'New Chat';
+        const title = firstUserMsg ? firstUserMsg.content.substring(0, 30) : 'New Chat';
+        
+        const sessionData = {
+          sessionId: sessionId,
+          title: title,
+          timestamp: new Date().toISOString(),
+          preview: preview
+        };
+        
+        await window.storage.set(`chat-session-${sessionId}`, JSON.stringify(sessionData));
+        await loadChatSessions();
+      }
     } catch (error) {
       console.error('Failed to save messages:', error);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -123,62 +219,6 @@ export default function App() {
 
   if (showConfig) {
     return (
-      <div style={{ 
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-        background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #0f172a)'
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: '28rem',
-          backdropFilter: 'blur(40px)',
-          borderRadius: '1.5rem',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-          padding: '2rem',
-          backgroundColor: 'rgba(30, 41, 59, 0.4)',
-          border: '1px solid rgba(51, 65, 85, 0.5)'
-        }}>
-          <h2 style={{ 
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            marginBottom: '1.5rem',
-            color: '#ffffff'
-          }}>Settings</h2>
-          
-          <div style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>
-            <p style={{ marginBottom: '1rem' }}>Your app is configured to use the same-origin API routes.</p>
-            <p>Session ID: <span style={{ fontFamily: 'monospace', color: '#a78bfa' }}>{sessionId.substring(0, 30)}...</span></p>
-          </div>
-
-          <button
-            onClick={() => setShowConfig(false)}
-            style={{
-              marginTop: '1.5rem',
-              width: '100%',
-              borderRadius: '1rem',
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#9333ea',
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#7e22ce'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#9333ea'}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
     <div style={{
       position: 'fixed',
       top: 0,
@@ -189,7 +229,7 @@ export default function App() {
       gridTemplateColumns: '256px 1fr',
       background: 'linear-gradient(to bottom right, #1e1b4b, #581c87, #0f172a)'
     }}>
-      {/* Sidebar - Using Grid Layout */}
+      {/* Sidebar */}
       <aside style={{ 
         padding: '1rem',
         display: 'flex',
@@ -198,83 +238,118 @@ export default function App() {
         borderRight: '2px solid rgba(147, 51, 234, 0.3)',
         overflowY: 'auto'
       }}>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ 
-            color: '#ffffff',
-            fontWeight: '600',
-            fontSize: '1.125rem',
-            margin: '0 0 1rem 0'
-          }}>Chat History</h1>
-          <div style={{ 
-            backgroundColor: 'rgba(30, 41, 59, 0.7)',
-            color: '#cbd5e1',
-            borderRadius: '0.5rem',
-            padding: '0.75rem',
-            fontSize: '0.875rem'
-          }}>
-            Current Session
-          </div>
-        </div>
-        
-        <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '1rem'
+        }}>
+          <h1 style={{ color: '#ffffff', fontWeight: '600', fontSize: '1.125rem', margin: 0 }}>
+            Chat History
+          </h1>
           <button
-            onClick={() => setShowConfig(true)}
-            style={{ 
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: '#cbd5e1',
-              borderRadius: '0.5rem',
-              padding: '0.75rem',
+            onClick={createNewChat}
+            style={{
+              backgroundColor: '#9333ea',
+              color: '#ffffff',
               border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 0.75rem',
               fontSize: '0.875rem',
-              marginBottom: '0.5rem'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#ffffff';
-              e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#cbd5e1';
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-          >
-            <Settings style={{ width: '1rem', height: '1rem' }} />
-            <span>Settings</span>
-          </button>
-          <button
-            onClick={clearConversation}
-            style={{ 
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: '#cbd5e1',
-              borderRadius: '0.5rem',
-              padding: '0.75rem',
-              border: 'none',
-              background: 'transparent',
               cursor: 'pointer',
-              fontSize: '0.875rem'
+              fontWeight: '500'
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#ffffff';
-              e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#cbd5e1';
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#7e22ce'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#9333ea'}
           >
-            <Trash2 style={{ width: '1rem', height: '1rem' }} />
-            <span>Clear Chat</span>
+            + New
           </button>
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {chatSessions.length === 0 ? (
+            <div style={{ 
+              backgroundColor: 'rgba(30, 41, 59, 0.7)', 
+              color: '#94a3b8', 
+              borderRadius: '0.5rem', 
+              padding: '0.75rem', 
+              fontSize: '0.875rem',
+              textAlign: 'center'
+            }}>
+              No chats yet
+            </div>
+          ) : (
+            chatSessions.map((session) => (
+              <div
+                key={session.sessionId}
+                onClick={() => switchToSession(session.sessionId)}
+                style={{ 
+                  backgroundColor: session.sessionId === currentSessionId ? 'rgba(147, 51, 234, 0.3)' : 'rgba(30, 41, 59, 0.5)',
+                  color: '#cbd5e1',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  border: session.sessionId === currentSessionId ? '1px solid rgba(147, 51, 234, 0.5)' : '1px solid transparent',
+                  transition: 'all 0.2s',
+                  position: 'relative',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'start'
+                }}
+                onMouseEnter={(e) => {
+                  if (session.sessionId !== currentSessionId) {
+                    e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.7)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (session.sessionId !== currentSessionId) {
+                    e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.5)';
+                  }
+                }}
+              >
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <div style={{ 
+                    fontWeight: session.sessionId === currentSessionId ? '600' : '400',
+                    marginBottom: '0.25rem',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {session.title || 'New Chat'}
+                  </div>
+                  <div style={{ 
+                    fontSize: '0.75rem',
+                    color: '#94a3b8',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {new Date(session.timestamp).toLocaleDateString()}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => deleteSession(session.sessionId, e)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#ef4444',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    fontSize: '1rem',
+                    marginLeft: '0.5rem',
+                    flexShrink: 0
+                  }}
+                  title="Delete chat"
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
       </aside>
-
       {/* Main Chat Area */}
       <main style={{ 
         display: 'flex',
@@ -451,4 +526,5 @@ export default function App() {
       `}</style>
     </div>
   );
+}
 }

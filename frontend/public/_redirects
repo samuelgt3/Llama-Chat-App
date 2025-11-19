@@ -1,0 +1,4 @@
+/* /index.html 200
+/* /index.html 200                    # Serve index.html for all routes (SPA routing)
+/old-page /new-page 301               # Permanent redirect
+/api/* https://ai-chat-worker.sgetnet283.workers.dev/ 200  # Proxy API requests
