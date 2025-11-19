@@ -7,7 +7,7 @@ A full-stack AI-powered chat application using **Llama 3.3** via Cloudflare Work
 ---
 ## Live Demo
 
-You can demo out my website at 
+You can check out my website at https://my-worker-67g.pages.dev/
 ## 🌟 Features
 
 - **🤖 Llama 3.3 Integration** - Powered by Cloudflare Workers AI
