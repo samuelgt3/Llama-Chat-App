@@ -18,24 +18,17 @@ export default function App() {
   }, []);   
   const loadChatSessions = async () => {
     try {
-      const stored = await window.storage.list('chat-session-');
-      if (stored && stored.keys) {
-        const sessions = [];
-        for (const key of stored.keys) {
-          try {
-            const sessionData = await window.storage.get(key);
-            if (sessionData) {
-              const data = JSON.parse(sessionData.value);
-              sessions.push(data);
-            }
-          } catch (e) {
-            console.error('Error loading session:', e);
-          }
-        }
+      const sessions = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+      if (key && key.startsWith('chat-session-')) {
+        const data =  await localStorage.getItem(key);
+        sessions.push(JSON.parse(data));
+    }
+  }
         // Sort by timestamp, newest first
         sessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setChatSessions(sessions);
-      }
     } catch (error) {
       console.error('Failed to load chat sessions:', error);
     }
@@ -46,13 +39,13 @@ export default function App() {
 
   const initializeSession = async () => {
     try {
-      const stored = await window.storage.get('current-chat-session');   
+      const stored = await localStorage.getItem('current-chat-session');   
       if (stored) {
         const data = JSON.parse(stored.value);
         setSessionId(data.sessionId);
         setCurrentSessionId(data.sessionId);                             
         
-        const msgStored = await window.storage.get(`messages-${data.sessionId}`);
+        const msgStored = await localStorage.getItem(`messages-${data.sessionId}`);
         if (msgStored) {
           setMessages(JSON.parse(msgStored.value));
         }
@@ -70,16 +63,15 @@ export default function App() {
       sessionId: newSessionId,
       title: 'New Chat',
       timestamp: new Date().toISOString(),
-      preview: ''
     };
-    
+    console.log(newSessionId);
     setSessionId(newSessionId);
     setCurrentSessionId(newSessionId);
     setMessages([]);
     
     try {
-      await window.storage.set('current-chat-session', JSON.stringify(newSession));
-      await window.storage.set(`chat-session-${newSessionId}`, JSON.stringify(newSession));
+      await localStorage.setItem('current-chat-session', JSON.stringify(newSession));
+      await localStorage.setItem(`chat-session-${newSessionId}`, JSON.stringify(newSession));
       await loadChatSessions();
     } catch (error) {
       console.error('Failed to create new chat:', error);
@@ -87,17 +79,17 @@ export default function App() {
   };
   const switchToSession = async (sessionId) => {
     try {
-      const sessionData = await window.storage.get(`chat-session-${sessionId}`);
+      const sessionData = await localStorage.getItem(`chat-session-${sessionId}`);
       if (sessionData) {
-        const data = JSON.parse(sessionData.value);
+        const data = JSON.parse(sessionData);
         setSessionId(sessionId);
         setCurrentSessionId(sessionId);
         
-        await window.storage.set('current-chat-session', JSON.stringify(data));
+        await localStorage.setItem('current-chat-session', JSON.stringify(data));
         
-        const msgStored = await window.storage.get(`messages-${sessionId}`);
+        const msgStored = await localStorage.getItem(`messages-${sessionId}`);
         if (msgStored) {
-          setMessages(JSON.parse(msgStored.value));
+          setMessages(JSON.parse(msgStored));
         } else {
           setMessages([]);
         }
@@ -111,8 +103,8 @@ export default function App() {
     e.stopPropagation();
     
     try {
-      await window.storage.delete(`chat-session-${sessionIdToDelete}`);
-      await window.storage.delete(`messages-${sessionIdToDelete}`);
+      await localStorage.removeItem(`chat-session-${sessionIdToDelete}`);
+      await localStorage.removeItem(`messages-${sessionIdToDelete}`);
       
       if (sessionIdToDelete === currentSessionId) {
         await createNewChat();
@@ -125,14 +117,12 @@ export default function App() {
   };
   const saveMessages = async (msgs) => {
     try {
-      await window.storage.set(`messages-${sessionId}`, JSON.stringify(msgs));
-      
-      // ← ADDED: Update session with preview and title
+      await localStorage.setItem(`messages-${sessionId}`, JSON.stringify(msgs));
       if (msgs.length > 0) {
         const firstUserMsg = msgs.find(m => m.role === 'user');
         const preview = firstUserMsg ? firstUserMsg.content.substring(0, 50) : 'New Chat';
         const title = firstUserMsg ? firstUserMsg.content.substring(0, 30) : 'New Chat';
-        
+
         const sessionData = {
           sessionId: sessionId,
           title: title,
@@ -140,7 +130,7 @@ export default function App() {
           preview: preview
         };
         
-        await window.storage.set(`chat-session-${sessionId}`, JSON.stringify(sessionData));
+        await localStorage.setItem(`chat-session-${sessionId}`, JSON.stringify(sessionData));
         await loadChatSessions();
       }
     } catch (error) {
